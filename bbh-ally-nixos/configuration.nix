@@ -311,7 +311,6 @@
 
     # Themes
     whitesur-kde whitesur-cursors whitesur-gtk-theme whitesur-icon-theme # whitesur theme
-    ibm-plex meslo-lgs-nf noto-fonts-emoji-blob-bin noto-fonts-cjk-sans noto-fonts-cjk-serif #fonts
 
     # GUI Apps
     fsearch krename grsync qdirstat czkawka # file management
@@ -330,6 +329,26 @@
   ];
   # }}}
 
+  # Fonts: See https://wiki.nixos.org/wiki/Fonts
+  fonts = {
+    enableDefaultPackages = true;
+    packages = with pkgs; [ 
+        noto-fonts noto-fonts-cjk-sans noto-fonts-cjk-serif noto-fonts-color-emoji noto-fonts-emoji-blob-bin
+        ibm-plex meslo-lgs-nf fira-code fira-code-symbols
+        ubuntu_font_family liberation_ttf dejavu_fonts
+        takao vazir-fonts
+    ];
+
+    # fontconfig = {
+    #   defaultFonts = {
+    #     serif = [  "Liberation Serif" "Vazirmatn" ];
+    #     sansSerif = [ "Ubuntu" "Vazirmatn" ];
+    #     monospace = [ "Ubuntu Mono" ];
+    #   };
+    # };
+  };
+
+  fonts.packages = builtins.filter lib.attrsets.isDerivation (builtins.attrValues pkgs.nerd-fonts);
 
   # {Virtualization}
   # {{{
@@ -409,4 +428,5 @@
   system.stateVersion = "26.05"; # DO NOT CHANGE
   # }}}
 }
+
 
