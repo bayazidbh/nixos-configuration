@@ -192,9 +192,10 @@
       enable = true;
       autoStart = true;
       user = "fenglengshun";
+      updater.splash = "bgrt"; #  one of "steamos", "jovian", "bgrt", "vendor" for splash screen used by the updater (preloader) step when launching Steam.
     };
-    hardware.has.amd.gpu = true;
-    steamos.useSteamOSConfig = true;
+    hardware.has.amd.gpu = true; # https://jovian-experiments.github.io/Jovian-NixOS/options.html#jovian.hardware.amd.gpu.enableBacklightControl
+    steamos.useSteamOSConfig = true; # https://jovian-experiments.github.io/Jovian-NixOS/options.html#jovian.steamos.useSteamOSConfig
     steam.desktopSession = "plasma"; # "plasma" or "plasmax11"
     decky-loader = {
       enable = true;
@@ -227,6 +228,8 @@
   # Enable Steam
   programs.steam = {
     enable = true;
+    protontricks.enable = true; #  Enable protontricks, a simple wrapper for running Winetricks commands for Proton games.
+    extest.enable = true; # Load the extest library into Steam, to translate X11 input events to uinput events (Steam Input on Wayland)
     localNetworkGameTransfers.openFirewall = true; # Open ports in the firewall for Steam Local Network Game Transfers.
     remotePlay.openFirewall = true; # Open ports in the firewall for Steam Remote Play
     dedicatedServer.openFirewall = true; # Open ports in the firewall for Source Dedicated Server
@@ -240,8 +243,8 @@
     enable = true;
     user = "fenglengshun";
     ui.enable = true;
-    adjustor.enable = true;
-    adjustor.loadAcpiCallModule = true;
+    adjustor.enable = true; # Enable Handheld Daemon TDP control plugin.
+    adjustor.loadAcpiCallModule = true; # Load the acpi_call kernel module. Required for TDP control by adjustor on most devices.
     };
 
   # Environment variables
@@ -315,17 +318,22 @@
     # GUI Apps
     fsearch krename grsync qdirstat czkawka # file management
     wpsoffice normcap # masterpdfeditor4 document editing
-    junction brave # google-chrome microsoft-edge vivaldi vivaldi-ffmpeg-codecsbrowser
+    junction brave google-chrome microsoft-edge vivaldi vivaldi-ffmpeg-codecs # browser
     qbittorrent resilio-sync rquickshare # file transfer
     protonvpn-gui proton-pass proton-authenticator # proton
     discord vencord vesktop # social media
     haruna vlc mcomix stremio mangayomi koreader  # multimedia
     distrobox gearlever boxbuddy # app management
+    
+    # Gaming
+    wineWowPackages.stagingFull dxvk winetricks wine-discord-ipc-bridge umu-launcher-unwrapped # wine
     protonup-qt steam-rom-manager sgdboop # steam management
-    lutris-unwrapped heroic-unwrapped faugus-launcher bottles-unwrapped # game management
-
+    lutris-unwrapped heroic-unwrapped # game management
+    faugus-launcher bottles-unwrapped # nero-umu # wine launchers
+    scanmem # GameConqueror
+    
     # Others
-    scanmem mediawriter waydroid-helper networkmanagerapplet # other utilities
+    mediawriter waydroid-helper networkmanagerapplet # other utilities
   ];
   # }}}
 
@@ -337,6 +345,7 @@
         ibm-plex meslo-lgs-nf fira-code fira-code-symbols
         ubuntu_font_family liberation_ttf dejavu_fonts
         takao vazir-fonts
+        wineWowPackages.fonts
     ];
 
     # fontconfig = {
@@ -428,5 +437,6 @@
   system.stateVersion = "26.05"; # DO NOT CHANGE
   # }}}
 }
+
 
 
