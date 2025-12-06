@@ -10,7 +10,9 @@
   # {{{
 
   # Use latest CachyOS kernel from Chaotic Nyx.
-  boot.kernelPackages = pkgs.linuxPackages_cachyos;
+  boot.kernelPackages = pkgs.linuxPackages_cachyos-gcc;
+  services.scx.enable = true; # by default uses scx_rustland scheduler
+  # services.scx.scheduler = "scx_rusty"; # jovian steam.nix sets "scx_lavd"
 
   # Enable SysRq key
   boot.kernel.sysctl = {
@@ -59,14 +61,7 @@
   # Configure network connections interactively with nmcli or nmtui.
   networking.networkmanager.enable = true;
 
-  # Configure network proxy if necessary
-  # networking.proxy.default = "http://user:password@proxy:port/";
-  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
-
-  # Open ports in the firewall.
-  # networking.firewall.allowedTCPPorts = [ ... ];
-  # networking.firewall.allowedUDPPorts = [ ... ];
-  # Or disable the firewall altogether.
+  # Disable firewall, open all ports
   networking.firewall.enable = false;
 
   # }}}
@@ -95,6 +90,7 @@
     enable = true;
     type = "fcitx5";
     fcitx5.addons = with pkgs; [ fcitx5-mozc-ut fcitx5-gtk ];
+    fcitx5.waylandFrontend = true;
   };
 
   # Configure keymap in X11
@@ -150,8 +146,9 @@
 
   # Enable udev rules for Steam hardware such as the Steam Controller
   hardware.steam-hardware.enable = true;
-  # Enable the xone driver for Xbox One and Xbox Series X|S accessories
-  hardware.xone.enable = true;
+  # Enable the xone driver for Xbox One and Xbox Series X / S accessories
+  # (kernel module may cause build fail)
+  # hardware.xone.enable = true;
 
   # }}}
 
@@ -234,7 +231,7 @@
     remotePlay.openFirewall = true; # Open ports in the firewall for Steam Remote Play
     dedicatedServer.openFirewall = true; # Open ports in the firewall for Source Dedicated Server
     extraCompatPackages = with pkgs; [
-      proton-ge-bin proton-cachyos_x86_64_v4 steamtinkerlaunch thcrap-steam-proton-wrapper # additional compatibility packages
+      proton-ge-bin steamtinkerlaunch thcrap-steam-proton-wrapper proton-cachyos_x86_64_v4 # additional compatibility packages
     ];
   };
 
@@ -246,6 +243,10 @@
     adjustor.enable = true; # Enable Handheld Daemon TDP control plugin.
     adjustor.loadAcpiCallModule = true; # Load the acpi_call kernel module. Required for TDP control by adjustor on most devices.
     };
+
+  # Disable PPD and TuneD to avoid conflict with HHD TDP management
+  services.power-profiles-daemon.enable = false;
+  services.tuned.enable = false;
 
   # Environment variables
   environment.sessionVariables = {
@@ -296,7 +297,7 @@
   # You can use https://search.nixos.org/ to find more packages (and options).
   environment.systemPackages = with pkgs; [
     # background system packages
-    cmake busybox wl-clipboard wl-clipboard-x11 libwebp
+    cmake busybox wl-clipboard wl-clipboard-x11 libwebp btrfs-progs
 
     # CLI tools
     dust nix-du graphviz cachix # nix tools
@@ -316,35 +317,38 @@
     whitesur-kde whitesur-cursors whitesur-gtk-theme whitesur-icon-theme # whitesur theme
 
     # GUI Apps
-    fsearch krename grsync qdirstat czkawka # file management
-    wpsoffice normcap # masterpdfeditor4 document editing
-    junction brave google-chrome microsoft-edge vivaldi vivaldi-ffmpeg-codecs # browser
+    fsearch krename grsync qdirstat czkawka peazip # file management
+    wpsoffice normcap # masterpdfeditor4 # document editing
+    junction brave firefox google-chrome microsoft-edge vivaldi vivaldi-ffmpeg-codecs # browser
     qbittorrent resilio-sync rquickshare # file transfer
     protonvpn-gui proton-pass proton-authenticator # proton
     discord vencord vesktop # social media
-    haruna vlc mcomix stremio mangayomi koreader  # multimedia
+    haruna vlc mcomix mangayomi koreader # stremio # multimedia
     distrobox gearlever boxbuddy # app management
-    
+
     # Gaming
-    wineWowPackages.stagingFull dxvk winetricks wine-discord-ipc-bridge umu-launcher-unwrapped # wine
+    wineWowPackages.stagingFull dxvk winetricks umu-launcher-unwrapped # wine
     protonup-qt steam-rom-manager sgdboop # steam management
     lutris-unwrapped heroic-unwrapped # game management
     faugus-launcher bottles-unwrapped # nero-umu # wine launchers
     scanmem # GameConqueror
-    
+
     # Others
     mediawriter waydroid-helper networkmanagerapplet # other utilities
+
+    # Chaotic Nyx
+    applet-window-title appmenu-gtk3-module
   ];
   # }}}
 
   # Fonts: See https://wiki.nixos.org/wiki/Fonts
   fonts = {
     enableDefaultPackages = true;
-    packages = with pkgs; [ 
-        noto-fonts noto-fonts-cjk-sans noto-fonts-cjk-serif noto-fonts-color-emoji noto-fonts-emoji-blob-bin
+    packages = with pkgs; [
+        liberation_ttf dejavu_fonts noto-fonts
+        noto-fonts-color-emoji noto-fonts-emoji-blob-bin
         ibm-plex meslo-lgs-nf fira-code fira-code-symbols
-        ubuntu_font_family liberation_ttf dejavu_fonts
-        takao vazir-fonts
+        takao noto-fonts-cjk-sans noto-fonts-cjk-serif vazir-fonts
         wineWowPackages.fonts
     ];
 
@@ -356,8 +360,6 @@
     #   };
     # };
   };
-
-  fonts.packages = builtins.filter lib.attrsets.isDerivation (builtins.attrValues pkgs.nerd-fonts);
 
   # {Virtualization}
   # {{{
@@ -437,6 +439,5 @@
   system.stateVersion = "26.05"; # DO NOT CHANGE
   # }}}
 }
-
 
 
