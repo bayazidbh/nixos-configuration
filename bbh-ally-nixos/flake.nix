@@ -9,7 +9,7 @@
     jovian.follows = "chaotic/jovian";
   };
 
-  outputs = { nixpkgs, chaotic, nixos-hardware ... }: {
+  outputs = { nixpkgs, chaotic, jovian, nixos-hardware, ... }: {
     nixosConfigurations = {
       bbh-ally-nixos = nixpkgs.lib.nixosSystem { # Replace "hostname" with your system's hostname
         system = "x86_64-linux";
