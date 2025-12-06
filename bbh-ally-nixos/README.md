@@ -2,8 +2,8 @@
 sudo nix-shell -p btrfs-progs
 ```
 ```
-mkfs.fat -F 32 /dev/nvme0n1p6
-mkfs.btrfs /dev/nvme0n1p8
+mkfs.fat -F 32 -n NIXOS-BOOT /dev/nvme0n1p6
+mkfs.btrfs -L NIXOS /dev/nvme0n1p8
 ```
 ```
 mkdir -p /mnt
