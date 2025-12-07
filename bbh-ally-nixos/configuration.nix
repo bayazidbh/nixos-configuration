@@ -56,7 +56,8 @@
   # {NETWORKING}
   # {{{
 
-  networking.hostName = "bbh-ally-nixos"; # Define your hostname.
+  # Define your hostname.
+  networking.hostName = "bbh-ally-nixos";
 
   # Configure network connections interactively with nmcli or nmtui.
   networking.networkmanager.enable = true;
@@ -73,7 +74,7 @@
   time.timeZone = "Asia/Jakarta";
 
   # Select internationalisation properties.
-  i18n.defaultLocale = "en_US.UTF-8";
+  i18n.defaultLocale = "en_SG.UTF-8";
   i18n.extraLocales = [ "en_US.UTF-8/UTF-8" "id_ID.UTF-8/UTF-8" "ja_JP.UTF-8/UTF-8" ];
   i18n.extraLocaleSettings = {
     LC_ADDRESS = "en_SG.UTF-8";
@@ -245,7 +246,7 @@
     };
 
   # Disable PPD and TuneD to avoid conflict with HHD TDP management
-  services.power-profiles-daemon.enable = false;
+  # services.power-profiles-daemon.enable = false;
   services.tuned.enable = false;
 
   # Environment variables
@@ -297,7 +298,8 @@
   # You can use https://search.nixos.org/ to find more packages (and options).
   environment.systemPackages = with pkgs; [
     # background system packages
-    cmake busybox wl-clipboard wl-clipboard-x11 libwebp btrfs-progs
+    cmake busybox wl-clipboard wl-clipboard-x11 btrfs-progs
+    libwebp libva1 libva-utils libvpx # codecs
 
     # CLI tools
     dust nix-du graphviz cachix # nix tools
@@ -305,8 +307,9 @@
     grc highlight # text coloring
     bubblewrap firejail boxxy # sandboxing
     wget aria2 rsync zsync # file transfer tools
-    appimage-run inxi chezmoi rmtrash unrar xdg-ninja chkcrontab # CLI utils
+    appimage-run inxi chezmoi sqlitebrowser rmtrash unrar xdg-ninja chkcrontab # CLI utils
     erdtree delta grex fd bottom ripgrep-all # rust CLIs
+    adl gallery-dl mangal mov-cli # CLI-based media downloader
 
     # KDE packages
     kdePackages.sddm-kcm kdePackages.kcron kdePackages.fcitx5-configtool
@@ -337,7 +340,7 @@
     mediawriter waydroid-helper networkmanagerapplet # other utilities
 
     # Chaotic Nyx
-    applet-window-title appmenu-gtk3-module
+    applet-window-title appmenu-gtk3-module jovian-chaotic.mangohud
   ];
   # }}}
 
@@ -407,6 +410,32 @@
   # Enable Plasma Browser Integration in Chromium browsers.
   programs.chromium = { enable = true; enablePlasmaBrowserIntegration = true; };
 
+  # Device off commands without sudo
+  security.sudo = {
+  enable = true;
+  extraRules = [{
+    commands = [
+      {
+        command = "${pkgs.systemd}/bin/systemctl suspend";
+        options = [ "NOPASSWD" ];
+      }
+      {
+        command = "${pkgs.systemd}/bin/reboot";
+        options = [ "NOPASSWD" ];
+      }
+      {
+        command = "${pkgs.systemd}/bin/poweroff";
+        options = [ "NOPASSWD" ];
+      }
+    ];
+    groups = [ "wheel" ];
+  }];
+  extraConfig = with pkgs; ''
+    Defaults:picloud secure_path="${lib.makeBinPath [
+      systemd
+    ]}:/nix/var/nix/profiles/default/bin:/run/current-system/sw/bin"
+  '';
+};
 
   # }}}
 
