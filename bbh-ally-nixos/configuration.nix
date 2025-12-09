@@ -168,7 +168,7 @@
     sddm = {
       enable = false; # Traditional Display Managers cannot be enabled when jovian.steam.autoStart is used
       wayland.enable = true;
-      settings.General.DisplayServer = "wayland"; # "wayland" or "x11-user"
+      settings.General.DisplayServer = "x11-user"; # "wayland" or "x11-user"
     };
     defaultSession = "gamescope-wayland"; # "plasma" or "plasmax11"
     autoLogin = {
@@ -194,7 +194,7 @@
     };
     hardware.has.amd.gpu = true; # https://jovian-experiments.github.io/Jovian-NixOS/options.html#jovian.hardware.amd.gpu.enableBacklightControl
     steamos.useSteamOSConfig = true; # https://jovian-experiments.github.io/Jovian-NixOS/options.html#jovian.steamos.useSteamOSConfig
-    steam.desktopSession = "plasma"; # "plasma" or "plasmax11"
+    steam.desktopSession = "plasmax11"; # "plasma" or "plasmax11"
     decky-loader = {
       enable = true;
       user = "fenglengshun";
@@ -298,7 +298,9 @@
   # You can use https://search.nixos.org/ to find more packages (and options).
   environment.systemPackages = with pkgs; [
     # background system packages
-    cmake busybox wl-clipboard wl-clipboard-x11 btrfs-progs
+    cmake busybox btrfs-progs
+    xdg-utils desktop-file-utils
+    wl-clipboard wl-clipboard-x11
     libwebp libva1 libva-utils libvpx # codecs
 
     # CLI tools
@@ -310,10 +312,12 @@
     appimage-run inxi chezmoi sqlitebrowser rmtrash unrar xdg-ninja chkcrontab # CLI utils
     erdtree delta grex fd bottom ripgrep-all # rust CLIs
     adl gallery-dl mangal mov-cli # CLI-based media downloader
+    file # other dependencies
 
     # KDE packages
     kdePackages.sddm-kcm kdePackages.kcron kdePackages.fcitx5-configtool
-    kdePackages.partitionmanager kdePackages.applet-window-buttons6
+    kdePackages.qtbase kdePackages.applet-window-buttons6
+    kdePackages.partitionmanager kdePackages.filelight
     kdePackages.arianna kdePackages.kate
 
     # Themes
@@ -323,11 +327,12 @@
     fsearch krename grsync qdirstat czkawka peazip # file management
     wpsoffice normcap # masterpdfeditor4 # document editing
     junction brave firefox google-chrome microsoft-edge vivaldi vivaldi-ffmpeg-codecs # browser
-    qbittorrent resilio-sync rquickshare # file transfer
+    gabutdm qbittorrent resilio-sync rquickshare # file transfer
     protonvpn-gui proton-pass proton-authenticator # proton
     discord vencord vesktop # social media
     haruna vlc mcomix mangayomi koreader # stremio # multimedia
     distrobox gearlever boxbuddy # app management
+    CuboCore.corekeyboard # on-screen keyboad (x11 only)
 
     # Gaming
     wineWowPackages.stagingFull dxvk winetricks umu-launcher-unwrapped # wine
@@ -397,6 +402,9 @@
   # {Options}
   # {{{
   # List Options that you want to enable (services, programs, system):
+
+  # Fix for /bin/bash scripts
+  services.envfs.enable = true;
 
   # Enable the OpenSSH daemon.
   services.openssh.enable = true;
