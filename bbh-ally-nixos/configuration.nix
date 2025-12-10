@@ -168,7 +168,7 @@
     sddm = {
       enable = false; # Traditional Display Managers cannot be enabled when jovian.steam.autoStart is used
       wayland.enable = true;
-      settings.General.DisplayServer = "x11-user"; # "wayland" or "x11-user"
+      settings.General.DisplayServer = "wayland"; # "wayland" or "x11-user"
     };
     defaultSession = "gamescope-wayland"; # "plasma" or "plasmax11"
     autoLogin = {
@@ -194,10 +194,10 @@
     };
     hardware.has.amd.gpu = true; # https://jovian-experiments.github.io/Jovian-NixOS/options.html#jovian.hardware.amd.gpu.enableBacklightControl
     steamos.useSteamOSConfig = true; # https://jovian-experiments.github.io/Jovian-NixOS/options.html#jovian.steamos.useSteamOSConfig
-    steam.desktopSession = "plasmax11"; # "plasma" or "plasmax11"
+    steam.desktopSession = "plasma"; # "plasma" or "plasmax11"
     decky-loader = {
       enable = true;
-      user = "fenglengshun";
+      # user = "fenglengshun";
     };
   };
 
@@ -236,20 +236,27 @@
     ];
   };
 
+  # Enable InputPlumber for ROG Ally button support
+  services.inputplumber.true = true;
+
+  # Enable PowerStation for TDP control support
+  services.powerstation.enable = true;
+
   # Install and configure handheld-daemon.
-  services.handheld-daemon = {
-    enable = true;
-    user = "fenglengshun";
-    ui.enable = true;
-    adjustor.enable = true; # Enable Handheld Daemon TDP control plugin.
-    adjustor.loadAcpiCallModule = true; # Load the acpi_call kernel module. Required for TDP control by adjustor on most devices.
-    };
+  # services.handheld-daemon = {
+  #   enable = true;
+  #   user = "fenglengshun";
+  #   ui.enable = true;
+  #   adjustor.enable = true; # Enable Handheld Daemon TDP control plugin.
+  #   adjustor.loadAcpiCallModule = true; # Load the acpi_call kernel module. Required for TDP control by adjustor on most devices.
+  #   };
 
-  # Disable PPD and TuneD to avoid conflict with HHD TDP management
+  # Disable PPD and TuneD to avoid conflict with HHD power profile management (optional)
   # services.power-profiles-daemon.enable = false;
-  services.tuned.enable = false;
+  # services.tuned.enable = false;
 
-  # Environment variables
+  # Environment variables for Game Mode HDR
+  # (make sure to re-export them as 0 in /home/fenglengshun/.config/plasma-workspace/env/)
   environment.sessionVariables = {
     PROTON_USE_NTSYNC       = "1";
     ENABLE_HDR_WSI          = "1";
@@ -405,6 +412,9 @@
 
   # Fix for /bin/bash scripts
   services.envfs.enable = true;
+
+  # Needed to run non-NixOS binary (optionally used with nix-alien)
+  programs.nix-ld.enable = true;
 
   # Enable the OpenSSH daemon.
   services.openssh.enable = true;
