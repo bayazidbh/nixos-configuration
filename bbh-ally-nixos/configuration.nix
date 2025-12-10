@@ -237,7 +237,7 @@
   };
 
   # Enable InputPlumber for ROG Ally button support
-  services.inputplumber.true = true;
+  services.inputplumber.enable = true;
 
   # Enable PowerStation for TDP control support
   services.powerstation.enable = true;
