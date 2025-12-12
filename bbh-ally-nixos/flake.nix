@@ -10,7 +10,7 @@
     nix-alien.url = "github:thiagokokada/nix-alien";
   };
 
-  outputs = { nixpkgs, nixos-hardware, chaotic, jovian, nix-alien ... }: {
+  outputs = { nixpkgs, nixos-hardware, chaotic, jovian, nix-alien, ... }: {
     nixosConfigurations = {
       bbh-ally-nixos = nixpkgs.lib.nixosSystem { # Replace "hostname" with your system's hostname
         system = "x86_64-linux";
