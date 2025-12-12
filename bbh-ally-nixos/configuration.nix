@@ -9,10 +9,13 @@
   # {BOOT}
   # {{{
 
-  # Use latest CachyOS kernel from Chaotic Nyx.
-  boot.kernelPackages = pkgs.linuxPackages_cachyos-gcc;
+  # Use latest CachyOS kernel from Chaotic Nyx..
+  boot.kernelPackages = pkgs.linuxPackages_cachyos-gcc; # apparently closest to cachyos-deckify
+  # activate ntsync module, preload hid drivers to prevent race condition
+  boot.kernelModules = [ "ntsync" "hid_nintendo" "hid_playstation" ];
   services.scx.enable = true; # by default uses scx_rustland scheduler
   # services.scx.scheduler = "scx_rusty"; # jovian steam.nix sets "scx_lavd"
+
 
   # Enable SysRq key
   boot.kernel.sysctl = {
@@ -33,6 +36,7 @@
       "rd.systemd.show_status=false"
       "rd.udev.log_level=3"
       "udev.log_priority=3"
+      "amdgpu.gttsize=8128"
     ];
     loader = {
       efi.canTouchEfiVariables = true;
@@ -44,6 +48,18 @@
     };
     plymouth.enable = true; # Splash screen
   };
+
+  # Make performance-related device attributes controllable by users.
+  services.udev.extraRules = ''
+    # Enables manual GPU clock control in Steam
+    # - /sys/class/drm/card0/device/power_dpm_force_performance_level
+    # - /sys/class/drm/card0/device/pp_od_clk_voltage
+    ACTION=="add", SUBSYSTEM=="pci", DRIVER=="amdgpu", RUN+="${pkgs.coreutils}/bin/chmod a+w /sys/%p/power_dpm_force_performance_level /sys/%p/pp_od_clk_voltage"
+
+    # https://github.com/ublue-os/bazzite/blob/f5f033424281f88f0a132ec0561a5a5f002faf24/system_files/deck/shared/usr/lib/udev/rules.d/50-ally-fingerprint.rules
+    ACTION=="add", SUBSYSTEM=="usb", TEST=="power/control", ATTR{idVendor}=="1c7a", ATTR{idProduct}=="0588", ATTR{power/control}="auto"
+    '';
+
 
   # Create swapfile
   swapDevices = [{
@@ -88,7 +104,7 @@
     LC_TIME = "en_SG.UTF-8";
   };
   i18n.inputMethod = {
-    enable = true;
+    enable = false;
     type = "fcitx5";
     fcitx5.addons = with pkgs; [ fcitx5-mozc-ut fcitx5-gtk ];
     fcitx5.waylandFrontend = true;
@@ -148,8 +164,10 @@
   # Enable udev rules for Steam hardware such as the Steam Controller
   hardware.steam-hardware.enable = true;
   # Enable the xone driver for Xbox One and Xbox Series X / S accessories
-  # (kernel module may cause build fail)
-  # hardware.xone.enable = true;
+  # (kernel module may cause build fail, enable jovian workaround for that)
+  hardware.xone.enable = true;
+  # Enable uinput support
+  hardware.uinput.enable = true;
 
   # }}}
 
@@ -190,15 +208,28 @@
       enable = true;
       autoStart = true;
       user = "fenglengshun";
-      updater.splash = "bgrt"; #  one of "steamos", "jovian", "bgrt", "vendor" for splash screen used by the updater (preloader) step when launching Steam.
+      updater.splash = "bgrt"; #  one of "steamos", "jovian", "bgrt", "vendor" for splash screen when launching Steam.
+      environment = {
+        PROTON_USE_NTSYNC       = "1";
+        ENABLE_HDR_WSI          = "1";
+        DXVK_HDR                = "1";
+        PROTON_ENABLE_AMD_AGS   = "1";
+        PROTON_ENABLE_NVAPI     = "1";
+        ENABLE_GAMESCOPE_WSI    = "1";
+        STEAM_MULTIPLE_XWAYLANDS = "1";
+      };
     };
     hardware.has.amd.gpu = true; # https://jovian-experiments.github.io/Jovian-NixOS/options.html#jovian.hardware.amd.gpu.enableBacklightControl
-    steamos.useSteamOSConfig = true; # https://jovian-experiments.github.io/Jovian-NixOS/options.html#jovian.steamos.useSteamOSConfig
+    steamos.useSteamOSConfig = false; # https://jovian-experiments.github.io/Jovian-NixOS/options.html#jovian.steamos.useSteamOSConfig
     steam.desktopSession = "plasma"; # "plasma" or "plasmax11"
     decky-loader = {
       enable = true;
-      # user = "fenglengshun";
+      user = "fenglengshun";
+      extraPackages = with pkgs; [
+        ryzenadj
+      ];
     };
+    workarounds.ignoreMissingKernelModules = true;
   };
 
   # Steam
@@ -237,35 +268,28 @@
   };
 
   # Enable InputPlumber for ROG Ally button support
-  services.inputplumber.enable = true;
+  # services.inputplumber.enable = true;
 
   # Enable PowerStation for TDP control support
-  services.powerstation.enable = true;
+  # services.powerstation.enable = true;
+
+  # Enable ROG Control Center
+  # programs.rog-control-center.enable = true;
+  # programs.rog-control-center.autoStart = true;
 
   # Install and configure handheld-daemon.
-  # services.handheld-daemon = {
-  #   enable = true;
-  #   user = "fenglengshun";
-  #   ui.enable = true;
-  #   adjustor.enable = true; # Enable Handheld Daemon TDP control plugin.
-  #   adjustor.loadAcpiCallModule = true; # Load the acpi_call kernel module. Required for TDP control by adjustor on most devices.
-  #   };
+  services.handheld-daemon = {
+    enable = true;
+    user = "fenglengshun";
+    ui.enable = true;
+    adjustor.enable = true; # Enable Handheld Daemon TDP control plugin.
+    adjustor.loadAcpiCallModule = true; # Load the acpi_call kernel module. Required for TDP control by adjustor on most devices.
+    };
 
   # Disable PPD and TuneD to avoid conflict with HHD power profile management (optional)
   # services.power-profiles-daemon.enable = false;
   # services.tuned.enable = false;
 
-  # Environment variables for Game Mode HDR
-  # (make sure to re-export them as 0 in /home/fenglengshun/.config/plasma-workspace/env/)
-  environment.sessionVariables = {
-    PROTON_USE_NTSYNC       = "1";
-    ENABLE_HDR_WSI          = "1";
-    DXVK_HDR                = "1";
-    PROTON_ENABLE_AMD_AGS   = "1";
-    PROTON_ENABLE_NVAPI     = "1";
-    ENABLE_GAMESCOPE_WSI    = "1";
-    STEAM_MULTIPLE_XWAYLANDS = "1";
-  };
   # }}}
 
   # {User Setup}
@@ -283,12 +307,12 @@
     isNormalUser = true;
     description = "Feng Lengshun";
     group = "fenglengshun";
-    extraGroups = [ "fenglengshun" "networkmanager" "wheel" "podman" "libvirtd" "gamemode" "docker" "video" "seat" "audio" ];
+    extraGroups = [ "fenglengshun" "networkmanager" "wheel" "podman" "libvirtd" "gamemode" "docker" "video" "seat" "audio" "uinput" ];
     home = "/home/fenglengshun";
     uid = 10000;
-    # packages = with pkgs; [
-    # extra packages
-    # ];
+    packages = with pkgs; [
+      decky-loader
+    ];
   };
   # }}}
 
@@ -319,7 +343,7 @@
     appimage-run inxi chezmoi sqlitebrowser rmtrash unrar xdg-ninja chkcrontab # CLI utils
     erdtree delta grex fd bottom ripgrep-all # rust CLIs
     adl gallery-dl mangal mov-cli # CLI-based media downloader
-    file # other dependencies
+    file ryzenadj # other dependencies
 
     # KDE packages
     kdePackages.sddm-kcm kdePackages.kcron kdePackages.fcitx5-configtool
@@ -352,7 +376,7 @@
     mediawriter waydroid-helper networkmanagerapplet # other utilities
 
     # Chaotic Nyx
-    applet-window-title appmenu-gtk3-module jovian-chaotic.mangohud
+    applet-window-title appmenu-gtk3-module jovian-chaotic.mangohud decky-loader
   ];
   # }}}
 
