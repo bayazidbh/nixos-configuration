@@ -180,7 +180,7 @@
 
   # Enable the X11 windowing system.
   services.xserver.enable = true;
-  services.xserver.displayManager.startx.enable = true; # Needed for x11 desktop mode
+  # services.xserver.displayManager.startx.enable = true; # Needed for x11 desktop mode
 
   # Configure SDDM with wayland as defaults
   services.displayManager = {
@@ -222,7 +222,7 @@
     };
     hardware.has.amd.gpu = true; # https://jovian-experiments.github.io/Jovian-NixOS/options.html#jovian.hardware.amd.gpu.enableBacklightControl
     steamos.useSteamOSConfig = false; # https://jovian-experiments.github.io/Jovian-NixOS/options.html#jovian.steamos.useSteamOSConfig
-    steam.desktopSession = "plasmax11"; # "plasma" or "plasmax11"
+    steam.desktopSession = "plasma"; # "plasma" or "plasmax11"
     decky-loader = {
       enable = true;
       user = "fenglengshun";
