@@ -104,10 +104,10 @@
     LC_TIME = "en_SG.UTF-8";
   };
   i18n.inputMethod = {
-    enable = false;
-    type = "fcitx5";
-    fcitx5.addons = with pkgs; [ fcitx5-mozc-ut fcitx5-gtk ];
-    fcitx5.waylandFrontend = true;
+    enable = true;
+    type = "ibus";
+    ibus.engines = with pkgs.ibus-engines; [ table-chinese pinyin anthy hangul mozc ];
+    ibus.panel = "${pkgs.kdePackages.plasma-desktop}/libexec/kimpanel-ibus-panel";
   };
 
   # Configure keymap in X11
@@ -164,8 +164,8 @@
   # Enable udev rules for Steam hardware such as the Steam Controller
   hardware.steam-hardware.enable = true;
   # Enable the xone driver for Xbox One and Xbox Series X / S accessories
-  # (kernel module may cause build fail, enable jovian workaround for that)
-  hardware.xone.enable = true;
+  # (kernel module may cause build fail)
+  # hardware.xone.enable = true;
   # Enable uinput support
   hardware.uinput.enable = true;
 
@@ -180,6 +180,7 @@
 
   # Enable the X11 windowing system.
   services.xserver.enable = true;
+  services.xserver.displayManager.startx.enable = true; # Needed for x11 desktop mode
 
   # Configure SDDM with wayland as defaults
   services.displayManager = {
@@ -221,7 +222,7 @@
     };
     hardware.has.amd.gpu = true; # https://jovian-experiments.github.io/Jovian-NixOS/options.html#jovian.hardware.amd.gpu.enableBacklightControl
     steamos.useSteamOSConfig = false; # https://jovian-experiments.github.io/Jovian-NixOS/options.html#jovian.steamos.useSteamOSConfig
-    steam.desktopSession = "plasma"; # "plasma" or "plasmax11"
+    steam.desktopSession = "plasmax11"; # "plasma" or "plasmax11"
     decky-loader = {
       enable = true;
       user = "fenglengshun";
