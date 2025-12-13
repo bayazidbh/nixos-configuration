@@ -221,7 +221,7 @@
       };
     };
     hardware.has.amd.gpu = true; # https://jovian-experiments.github.io/Jovian-NixOS/options.html#jovian.hardware.amd.gpu.enableBacklightControl
-    steamos.useSteamOSConfig = false; # https://jovian-experiments.github.io/Jovian-NixOS/options.html#jovian.steamos.useSteamOSConfig
+    steamos.useSteamOSConfig = true; # https://jovian-experiments.github.io/Jovian-NixOS/options.html#jovian.steamos.useSteamOSConfig
     steam.desktopSession = "plasma"; # "plasma" or "plasmax11"
     decky-loader = {
       enable = true;
@@ -269,11 +269,9 @@
   };
 
   # Enable InputPlumber for ROG Ally button support
-  # services.inputplumber.enable = true;
-
+  # services.inputplumber.enable = true
   # Enable PowerStation for TDP control support
   # services.powerstation.enable = true;
-
   # Enable ROG Control Center
   # programs.rog-control-center.enable = true;
   # programs.rog-control-center.autoStart = true;
@@ -290,6 +288,12 @@
   # Disable PPD and TuneD to avoid conflict with HHD power profile management (optional)
   # services.power-profiles-daemon.enable = false;
   # services.tuned.enable = false;
+
+  # Environment variables
+  environment.sessionVariables = {
+    STEAMOS_NESTED_DESKTOP_WIDTH  = "1920";
+    STEAMOS_NESTED_DESKTOP_HEIGHT = "1080";
+  };
 
   # }}}
 
