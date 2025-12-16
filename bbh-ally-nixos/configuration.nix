@@ -30,8 +30,10 @@
     consoleLogLevel = 0;
     initrd.verbose = false;
     kernelParams = [
-      "amd_pstate=active"
       "quiet"
+      "splash"
+      "console=/dev/null"
+      "amd_pstate=active"
       "loglevel=3"
       "rd.systemd.show_status=false"
       "rd.udev.log_level=3"
@@ -59,7 +61,6 @@
     # https://github.com/ublue-os/bazzite/blob/f5f033424281f88f0a132ec0561a5a5f002faf24/system_files/deck/shared/usr/lib/udev/rules.d/50-ally-fingerprint.rules
     ACTION=="add", SUBSYSTEM=="usb", TEST=="power/control", ATTR{idVendor}=="1c7a", ATTR{idProduct}=="0588", ATTR{power/control}="auto"
     '';
-
 
   # Create swapfile
   swapDevices = [{
@@ -185,15 +186,27 @@
   # Configure SDDM with wayland as defaults
   services.displayManager = {
     sddm = {
-      enable = false; # Traditional Display Managers cannot be enabled when jovian.steam.autoStart is used
+      enable = true; # Traditional Display Managers cannot be enabled when jovian.steam.autoStart is used
       wayland.enable = true;
       settings.General.DisplayServer = "wayland"; # "wayland" or "x11-user"
     };
-    defaultSession = "gamescope-wayland"; # "plasma" or "plasmax11"
+    defaultSession = "plasma"; # "gamescope-wayland" for game mode, "plasma" or "plasmax11" for desktop mode
     autoLogin = {
       enable = true;
       user = "fenglengshun";
     };
+  };
+
+  # Auto Login to Game Mode
+  services.getty.autologinUser = "fenglengshun";
+  services.greetd = {
+    enable = true;
+    settings = {
+      default_session = {
+        command = "${pkgs.gamescope}/bin/gamescope -W 1920 -H 1080 -f -e --xwayland-count 2 --hdr-enabled --hdr-itm-enabled -- steam -pipewire-dmabuf -gamepadui -steamdeck -steamos3 > /dev/null 2>&1";
+      user = "fenglengshun";
+        };
+      };
   };
 
   # Enable Flatpak
@@ -202,39 +215,37 @@
 
   # }}}
 
-  # {JOVIAN}
+  # {STEAM}
   # {{{
-  jovian = {
-    steam = {
-      enable = true;
-      autoStart = true;
-      user = "fenglengshun";
-      updater.splash = "bgrt"; #  one of "steamos", "jovian", "bgrt", "vendor" for splash screen when launching Steam.
-      environment = {
-        PROTON_USE_NTSYNC       = "1";
-        ENABLE_HDR_WSI          = "1";
-        DXVK_HDR                = "1";
-        PROTON_ENABLE_AMD_AGS   = "1";
-        PROTON_ENABLE_NVAPI     = "1";
-        ENABLE_GAMESCOPE_WSI    = "1";
-        STEAM_MULTIPLE_XWAYLANDS = "1";
-      };
-    };
-    hardware.has.amd.gpu = true; # https://jovian-experiments.github.io/Jovian-NixOS/options.html#jovian.hardware.amd.gpu.enableBacklightControl
-    steamos.useSteamOSConfig = true; # https://jovian-experiments.github.io/Jovian-NixOS/options.html#jovian.steamos.useSteamOSConfig
-    steam.desktopSession = "plasma"; # "plasma" or "plasmax11"
-    decky-loader = {
-      enable = true;
-      user = "fenglengshun";
-      extraPackages = with pkgs; [
-        ryzenadj
-      ];
-    };
-    workarounds.ignoreMissingKernelModules = true;
+
+  # Enable Gamescope
+  programs.gamescope = {
+    enable = true;
+    capSysNice = true;
   };
 
-  # Steam
-  #
+  # Enable Steam
+  programs.steam = {
+    enable = true;
+    package = pkgs.steam.override { # add needed xorg library for nested gamescope
+      extraPkgs = pkgs': with pkgs'; [
+        xorg.libXcursor xorg.libXi xorg.libXinerama xorg.libXScrnSaver
+        libpng libpulseaudio libvorbis
+        stdenv.cc.cc.lib # Provides libstdc++.so.6
+        libkrb5 keyutils # Add other libraries as needed
+      ];
+    };
+    gamescopeSession.enable = true; # Integrates Game Mode with Steam
+    protontricks.enable = true; #  Enable protontricks, a simple wrapper for running Winetricks commands for Proton games.
+    extest.enable = true; # Load the extest library into Steam, to translate X11 input events to uinput events (Steam Input on Wayland)
+    localNetworkGameTransfers.openFirewall = true; # Open ports in the firewall for Steam Local Network Game Transfers.
+    remotePlay.openFirewall = true; # Open ports in the firewall for Steam Remote Play
+    dedicatedServer.openFirewall = true; # Open ports in the firewall for Source Dedicated Server
+    extraCompatPackages = with pkgs; [ # additional compatibility packages
+      proton-ge-bin steamtinkerlaunch thcrap-steam-proton-wrapper proton-cachyos_x86_64_v4
+    ];
+  };
+
   # Set game launcher: gamemoderun %command%
   #   Set this for each game in Steam, if the game could benefit from a minor
   #   performance tweak: YOUR_GAME > Properties > General > Launch > Options
@@ -255,27 +266,6 @@
     };
   };
 
-  # Enable Steam
-  programs.steam = {
-    enable = true;
-    protontricks.enable = true; #  Enable protontricks, a simple wrapper for running Winetricks commands for Proton games.
-    extest.enable = true; # Load the extest library into Steam, to translate X11 input events to uinput events (Steam Input on Wayland)
-    localNetworkGameTransfers.openFirewall = true; # Open ports in the firewall for Steam Local Network Game Transfers.
-    remotePlay.openFirewall = true; # Open ports in the firewall for Steam Remote Play
-    dedicatedServer.openFirewall = true; # Open ports in the firewall for Source Dedicated Server
-    extraCompatPackages = with pkgs; [
-      proton-ge-bin steamtinkerlaunch thcrap-steam-proton-wrapper proton-cachyos_x86_64_v4 # additional compatibility packages
-    ];
-  };
-
-  # Enable InputPlumber for ROG Ally button support
-  # services.inputplumber.enable = true
-  # Enable PowerStation for TDP control support
-  # services.powerstation.enable = true;
-  # Enable ROG Control Center
-  # programs.rog-control-center.enable = true;
-  # programs.rog-control-center.autoStart = true;
-
   # Install and configure handheld-daemon.
   services.handheld-daemon = {
     enable = true;
@@ -285,14 +275,34 @@
     adjustor.loadAcpiCallModule = true; # Load the acpi_call kernel module. Required for TDP control by adjustor on most devices.
     };
 
+  # Disable InputPlumber ROG Ally input support to avoid HHD conflict
+  services.inputplumber.enable = false;
+  # Disable PowerStation TDP control support to avoid HHD conflict
+  services.powerstation.enable = false;
+  # Enable ROG Control Center
+  programs.rog-control-center.enable = true;
+  programs.rog-control-center.autoStart = true;
+  # Enable asusd
+  services.asusd.enable = true;
+  services.asusd.enableUserService = true;
+
   # Disable PPD and TuneD to avoid conflict with HHD power profile management (optional)
   # services.power-profiles-daemon.enable = false;
-  # services.tuned.enable = false;
+  services.tuned.enable = false;
 
-  # Environment variables
+  # Environment variables for Steamm
   environment.sessionVariables = {
+    PROTON_USE_NTSYNC       = "1";
+    ENABLE_HDR_WSI          = "1";
+    DXVK_HDR                = "1";
+    PROTON_ENABLE_AMD_AGS   = "1";
+    PROTON_ENABLE_NVAPI     = "1";
+    ENABLE_GAMESCOPE_WSI    = "1";
+    STEAM_MULTIPLE_XWAYLANDS = "1";
+
     STEAMOS_NESTED_DESKTOP_WIDTH  = "1920";
     STEAMOS_NESTED_DESKTOP_HEIGHT = "1080";
+    STEAM_EXTRA_COMPAT_TOOLS_PATHS = "$HOME/.local/share/Steam/compatibilitytools.d";
   };
 
   # }}}
@@ -312,13 +322,21 @@
     isNormalUser = true;
     description = "Feng Lengshun";
     group = "fenglengshun";
-    extraGroups = [ "fenglengshun" "networkmanager" "wheel" "podman" "libvirtd" "gamemode" "docker" "video" "seat" "audio" "uinput" ];
+    extraGroups = [ "fenglengshun" "networkmanager" "wheel" "podman" "libvirtd" "gamemode" "docker" "video" "seat" "audio" "uinput" "decky" ];
     home = "/home/fenglengshun";
     uid = 10000;
-    packages = with pkgs; [
-      decky-loader
-    ];
+    shell = pkgs.zsh;
+    # packages = with pkgs; [ decky-loader ];
   };
+
+  # Environment variables
+  environment.sessionVariables = {
+    XDG_CACHE_HOME  = "$HOME/.cache";
+    XDG_CONFIG_HOME = "$HOME/.config";
+    XDG_DATA_HOME   = "$HOME/.local/share";
+    XDG_STATE_HOME  = "$HOME/.local/state";
+  };
+
   # }}}
 
   # {Packages}
@@ -327,8 +345,8 @@
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
   nixpkgs.config.allowUnfreePredicate = _: true; # needed for flakes
-  # TEMPORARY allow insecure packages RECHECK nix-tree!
-  # nixpkgs.config.permittedInsecurePackages = [  ];
+  # Allow insecure packages RECHECK nix-tree!
+  nixpkgs.config.permittedInsecurePackages = [ "qtwebengine-5.15.19" ]; # for Stremio
 
   # List packages installed in system profile.
   # You can use https://search.nixos.org/ to find more packages (and options).
@@ -343,7 +361,7 @@
     dust nix-du graphviz cachix # nix tools
     git gh github-desktop git-lfs cosign # build tools
     grc highlight # text coloring
-    bubblewrap firejail boxxy # sandboxing
+    firejail boxxy # sandboxing
     wget aria2 rsync zsync # file transfer tools
     appimage-run inxi chezmoi sqlitebrowser rmtrash unrar xdg-ninja chkcrontab # CLI utils
     erdtree delta grex fd bottom ripgrep-all # rust CLIs
@@ -361,14 +379,14 @@
 
     # GUI Apps
     fsearch krename grsync qdirstat czkawka peazip # file management
-    wpsoffice normcap # masterpdfeditor4 # document editing
+    wpsoffice normcap masterpdfeditor4 # document editing
     junction brave firefox google-chrome microsoft-edge vivaldi vivaldi-ffmpeg-codecs # browser
     gabutdm qbittorrent resilio-sync rquickshare # file transfer
     protonvpn-gui proton-pass proton-authenticator # proton
     discord vencord vesktop # social media
-    haruna vlc mcomix mangayomi koreader # stremio # multimedia
+    haruna vlc mcomix mangayomi koreader stremio # multimedia
     distrobox gearlever boxbuddy # app management
-    CuboCore.corekeyboard # on-screen keyboad (x11 only)
+    # CuboCore.corekeyboard # on-screen keyboad (x11 only)
 
     # Gaming
     wineWowPackages.stagingFull dxvk winetricks umu-launcher-unwrapped # wine
@@ -376,12 +394,14 @@
     lutris-unwrapped heroic-unwrapped # game management
     faugus-launcher bottles-unwrapped # nero-umu # wine launchers
     scanmem # GameConqueror
+    gamescope-wsi # for HDR
+    mangohud # performance overlay
 
     # Others
     mediawriter waydroid-helper networkmanagerapplet # other utilities
 
     # Chaotic Nyx
-    applet-window-title appmenu-gtk3-module jovian-chaotic.mangohud decky-loader
+    applet-window-title appmenu-gtk3-module
   ];
   # }}}
 
@@ -439,23 +459,67 @@
   # {{{
   # List Options that you want to enable (services, programs, system):
 
-  # Fix for /bin/bash scripts
-  services.envfs.enable = true;
+  # Enable zsh shell
+  programs.zsh = {
+    enable = true;
+    enableCompletion = true;
+    autosuggestions.enable = true;
+    syntaxHighlighting.enable = true;
 
-  # Needed to run non-NixOS binary (optionally used with nix-alien)
-  programs.nix-ld.enable = true;
+    # shellAliases = {
+    #   ll = "ls -l";
+    #   edit = "sudo -e";
+    #   update = "sudo nixos-rebuild switch";
+    # };
+
+    histSize = 10000;
+    histFile = "$HOME/.config/zsh/zsh_history";
+    setOptions = [
+      "HIST_IGNORE_ALL_DUPS"
+    ];
+  };
 
   # Enable the OpenSSH daemon.
   services.openssh.enable = true;
 
+  # Fix for /bin/bash scripts
+  services.envfs.enable = true;
+  # Needed to run non-NixOS binary (optionally used with nix-alien)
+  programs.nix-ld.enable = true;
   # Registers AppImage files to be run with appimage-run as interpreter
   programs.appimage = { enable = true; binfmt = true; };
 
   # Install firefox.
   programs.firefox.enable = true;
-
   # Enable Plasma Browser Integration in Chromium browsers.
   programs.chromium = { enable = true; enablePlasmaBrowserIntegration = true; };
+
+  # Sets the proper environment variable to use appmenu-gtk3-module.
+  chaotic.appmenu-gtk3-module.enable = true;
+
+  # Enable Firejail sandboxing
+  programs.firejail = {
+    enable = true;
+    wrappedBinaries = {
+      wps = {
+        executable = "${lib.getBin pkgs.wpsoffice}/bin/wps";
+        profile = "${pkgs.firejail}/etc/firejail/wps.profile";
+      };
+      et = {
+        executable = "${lib.getBin pkgs.wpsoffice}/bin/et";
+        profile = "${pkgs.firejail}/etc/firejail/et.profile";
+      };
+      wpp = {
+        executable = "${lib.getBin pkgs.wpsoffice}/bin/wpp";
+        profile = "${pkgs.firejail}/etc/firejail/wpp.profile";
+      };
+      wpspdf = {
+        executable = "${lib.getBin pkgs.wpsoffice}/bin/wpspdf";
+        profile = "${pkgs.firejail}/etc/firejail/wpspdf.profile";
+      };
+    };
+  };
+
 
   # Device off commands without sudo
   security.sudo = {
