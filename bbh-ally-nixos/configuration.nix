@@ -186,7 +186,7 @@
       wayland.enable = true;
       settings.General.DisplayServer = "wayland"; # "wayland" or "x11-user"
     };
-    defaultSession = "steam"; # "steam" for game mode, "plasma" or "plasmax11" for desktop mode
+    defaultSession = "plasma"; # "steam" for game mode, "plasma" or "plasmax11" for desktop mode
     autoLogin = {
       enable = true;
       user = "fenglengshun";
