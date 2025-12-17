@@ -9,13 +9,10 @@
   # {BOOT}
   # {{{
 
-  # Use latest CachyOS kernel from Chaotic Nyx..
-  boot.kernelPackages = pkgs.linuxPackages_cachyos-gcc; # apparently closest to cachyos-deckify
   # activate ntsync module, preload hid drivers to prevent race condition
   boot.kernelModules = [ "ntsync" "hid_nintendo" "hid_playstation" ];
   services.scx.enable = true; # by default uses scx_rustland scheduler
   # services.scx.scheduler = "scx_rusty"; # jovian steam.nix sets "scx_lavd"
-
 
   # Enable SysRq key
   boot.kernel.sysctl = {
@@ -32,7 +29,6 @@
     kernelParams = [
       "quiet"
       "splash"
-      "console=/dev/null"
       "amd_pstate=active"
       "loglevel=3"
       "rd.systemd.show_status=false"
@@ -125,7 +121,7 @@
 
   # }}}
 
-  # {HARDWARE}
+  # {DRIVERS}
   # {{{
 
   # Enable bluetooth
@@ -186,27 +182,15 @@
   # Configure SDDM with wayland as defaults
   services.displayManager = {
     sddm = {
-      enable = true; # Traditional Display Managers cannot be enabled when jovian.steam.autoStart is used
+      enable = true;
       wayland.enable = true;
       settings.General.DisplayServer = "wayland"; # "wayland" or "x11-user"
     };
-    defaultSession = "plasma"; # "gamescope-wayland" for game mode, "plasma" or "plasmax11" for desktop mode
+    defaultSession = "steam"; # "steam" for game mode, "plasma" or "plasmax11" for desktop mode
     autoLogin = {
       enable = true;
       user = "fenglengshun";
     };
-  };
-
-  # Auto Login to Game Mode
-  services.getty.autologinUser = "fenglengshun";
-  services.greetd = {
-    enable = true;
-    settings = {
-      default_session = {
-        command = "${pkgs.gamescope}/bin/gamescope -W 1920 -H 1080 -f -e --xwayland-count 2 --hdr-enabled --hdr-itm-enabled -- steam -pipewire-dmabuf -gamepadui -steamdeck -steamos3 > /dev/null 2>&1";
-      user = "fenglengshun";
-        };
-      };
   };
 
   # Enable Flatpak
@@ -232,17 +216,22 @@
         xorg.libXcursor xorg.libXi xorg.libXinerama xorg.libXScrnSaver
         libpng libpulseaudio libvorbis
         stdenv.cc.cc.lib # Provides libstdc++.so.6
-        libkrb5 keyutils # Add other libraries as needed
+        libkrb5 keyutils extest # Add other libraries as needed
       ];
     };
-    gamescopeSession.enable = true; # Integrates Game Mode with Steam
+    gamescopeSession = { # Integrates Game Mode with Steam
+      enable = true;
+      # env = {};
+      args = [ "-W 1920" "-H 1080" "-f" "-e" "--xwayland-count 2" "--hdr-enabled" "--hdr-itm-enabled" ];
+      steamArgs = [ "-pipewire-dmabuf" "-gamepadui" "-steamdeck" "-steamos3" ];
+    };
     protontricks.enable = true; #  Enable protontricks, a simple wrapper for running Winetricks commands for Proton games.
     extest.enable = true; # Load the extest library into Steam, to translate X11 input events to uinput events (Steam Input on Wayland)
     localNetworkGameTransfers.openFirewall = true; # Open ports in the firewall for Steam Local Network Game Transfers.
     remotePlay.openFirewall = true; # Open ports in the firewall for Steam Remote Play
     dedicatedServer.openFirewall = true; # Open ports in the firewall for Source Dedicated Server
     extraCompatPackages = with pkgs; [ # additional compatibility packages
-      proton-ge-bin steamtinkerlaunch thcrap-steam-proton-wrapper proton-cachyos_x86_64_v4
+      steamtinkerlaunch thcrap-steam-proton-wrapper
     ];
   };
 
@@ -399,9 +388,6 @@
 
     # Others
     mediawriter waydroid-helper networkmanagerapplet # other utilities
-
-    # Chaotic Nyx
-    applet-window-title appmenu-gtk3-module
   ];
   # }}}
 
@@ -494,9 +480,6 @@
   # Enable Plasma Browser Integration in Chromium browsers.
   programs.chromium = { enable = true; enablePlasmaBrowserIntegration = true; };
 
-  # Sets the proper environment variable to use appmenu-gtk3-module.
-  chaotic.appmenu-gtk3-module.enable = true;
-
   # Enable Firejail sandboxing
   programs.firejail = {
     enable = true;
@@ -554,6 +537,10 @@
   # {{{
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
+  # use nix-cachyos-kernel binary cache
+  nix.settings.substituters = [ "https://attic.xuyh0120.win/lantian" ];
+  nix.settings.trusted-public-keys = [ "lantian:EeAUQ+W+6r7EtwnmYjeVwx5kOGEBpjlBfPlzGlTNvHc=" ];
+
   # Enable system autoupgrade:
   system.autoUpgrade = {
     enable = true;
@@ -579,5 +566,3 @@
   system.stateVersion = "26.05"; # DO NOT CHANGE
   # }}}
 }
-
-
