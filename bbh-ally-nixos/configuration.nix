@@ -9,6 +9,8 @@
   # {BOOT}
   # {{{
 
+  # Set kernel to use
+  # boot.kernelPackages = pkgs.linux_jovian; # currently set in flake.nix
   # activate ntsync module, preload hid drivers to prevent race condition
   boot.kernelModules = [ "ntsync" "hid_nintendo" "hid_playstation" ];
   services.scx.enable = true; # by default uses scx_rustland scheduler
@@ -127,6 +129,7 @@
   # Enable bluetooth
   hardware.bluetooth = {
     enable = true;
+    powerOnBoot = true;
     settings = {
       General = {
         MultiProfile     = "multiple";
@@ -182,11 +185,11 @@
   # Configure SDDM with wayland as defaults
   services.displayManager = {
     sddm = {
-      enable = true;
+      enable = false; # cannot use with jovian gamescope session
       wayland.enable = true;
       settings.General.DisplayServer = "wayland"; # "wayland" or "x11-user"
     };
-    defaultSession = "plasma"; # "steam" for game mode, "plasma" or "plasmax11" for desktop mode
+    defaultSession = "gamescope-wayland"; # "gamescope-wayland" for game mode, "plasma" or "plasmax11" for desktop mode
     autoLogin = {
       enable = true;
       user = "fenglengshun";
@@ -202,11 +205,11 @@
   # {STEAM}
   # {{{
 
-  # Enable Gamescope
-  programs.gamescope = {
-    enable = true;
-    capSysNice = true;
-  };
+  # Enable Gamescope (not needed with Jovian)
+  # programs.gamescope = {
+  #   enable = true;
+  #   capSysNice = true;
+  # };
 
   # Enable Steam
   programs.steam = {
@@ -219,12 +222,12 @@
         libkrb5 keyutils # Add other libraries as needed
       ];
     };
-    gamescopeSession = { # Integrates Game Mode with Steam
-      enable = true;
-      # env = {};
-      args = [ "-W 1920" "-H 1080" "-f" "-e" "--xwayland-count 2" "--hdr-enabled" "--hdr-itm-enabled" ];
-      steamArgs = [ "-pipewire-dmabuf" "-gamepadui" "-steamdeck" "-steamos3" ];
-    };
+    # gamescopeSession = { # Integrates Game Mode with Steam
+    #   enable = true;
+    #   env = {};
+    #   args = [ "-W 1920" "-H 1080" "-f" "-e" "--xwayland-count 2" "--hdr-enabled" "--hdr-itm-enabled" ];
+    #   steamArgs = [ "-pipewire-dmabuf" "-gamepadui" "-steamdeck" "-steamos3" ];
+    # };
     protontricks.enable = true; #  Enable protontricks, a simple wrapper for running Winetricks commands for Proton games.
     extest.enable = false; # Make sure extest is disabled
     localNetworkGameTransfers.openFirewall = true; # Open ports in the firewall for Steam Local Network Game Transfers.
@@ -233,6 +236,33 @@
     extraCompatPackages = with pkgs; [ # additional compatibility packages
       steamtinkerlaunch thcrap-steam-proton-wrapper
     ];
+  };
+
+  # Enable Jovian
+  jovian = {
+    steam = {
+      enable = true;
+      autoStart = true;
+      user = "fenglengshun";
+      updater.splash = "bgrt"; #  one of "steamos", "jovian", "bgrt", "vendor" for splash screen when launching Steam.
+      environment = {
+        PROTON_USE_NTSYNC       = "1";
+        ENABLE_HDR_WSI          = "1";
+        DXVK_HDR                = "1";
+        PROTON_ENABLE_AMD_AGS   = "1";
+        PROTON_ENABLE_NVAPI     = "1";
+        ENABLE_GAMESCOPE_WSI    = "1";
+        STEAM_MULTIPLE_XWAYLANDS = "1";
+      };
+    };
+    hardware.has.amd.gpu = true; # https://jovian-experiments.github.io/Jovian-NixOS/options.html#jovian.hardware.amd.gpu.enableBacklightControl
+    steamos.useSteamOSConfig = true; # https://jovian-experiments.github.io/Jovian-NixOS/options.html#jovian.steamos.useSteamOSConfig
+    steam.desktopSession = "plasma"; # "plasma" or "plasmax11"
+    decky-loader = {
+      enable = true;
+      user = "fenglengshun";
+      extraPackages = with pkgs; [ ryzenadj ];
+    };
   };
 
   # Set game launcher: gamemoderun %command%
@@ -265,12 +295,9 @@
     };
 
   # Disable InputPlumber ROG Ally input support to avoid HHD conflict
-  services.inputplumber.enable = false;
+  services.inputplumber.enable = lib.mkForce false; # use 'lib.mkForce false;' in case of Jovian
   # Disable PowerStation TDP control support to avoid HHD conflict
   services.powerstation.enable = false;
-  # Enable ROG Control Center
-  programs.rog-control-center.enable = true;
-  programs.rog-control-center.autoStart = true;
   # Enable asusd
   services.asusd.enable = true;
   services.asusd.enableUserService = true;
@@ -292,6 +319,17 @@
     STEAMOS_NESTED_DESKTOP_WIDTH  = "1920";
     STEAMOS_NESTED_DESKTOP_HEIGHT = "1080";
     STEAM_EXTRA_COMPAT_TOOLS_PATHS = "$HOME/.local/share/Steam/compatibilitytools.d";
+  };
+
+  # Enable CEF debugging for decky-loader
+  systemd.services.steam-cef-debug = lib.mkIf config.jovian.decky-loader.enable {
+    description = "Create Steam CEF debugging file";
+    serviceConfig = {
+      Type = "oneshot";
+      User = config.jovian.steam.user;
+      ExecStart = "/bin/sh -c 'mkdir -p ~/.steam/steam && [ ! -f ~/.steam/steam/.cef-enable-remote-debugging ] && touch ~/.steam/steam/.cef-enable-remote-debugging || true'";
+    };
+    wantedBy = [ "multi-user.target" ];
   };
 
   # }}}
@@ -358,9 +396,10 @@
     file ryzenadj # other dependencies
 
     # KDE packages
-    kdePackages.sddm-kcm kdePackages.kcron kdePackages.fcitx5-configtool
-    kdePackages.qtbase kdePackages.applet-window-buttons6
+    kdePackages.kcron kdePackages.fcitx5-configtool # kdePackages.sddm-kcm
+    kdePackages.applet-window-buttons6
     kdePackages.partitionmanager kdePackages.filelight
+    kdePackages.kcharselect kdePackages.kcalc
     kdePackages.arianna kdePackages.kate
 
     # Themes
