@@ -216,7 +216,7 @@
         xorg.libXcursor xorg.libXi xorg.libXinerama xorg.libXScrnSaver
         libpng libpulseaudio libvorbis
         stdenv.cc.cc.lib # Provides libstdc++.so.6
-        libkrb5 keyutils extest # Add other libraries as needed
+        libkrb5 keyutils # Add other libraries as needed
       ];
     };
     gamescopeSession = { # Integrates Game Mode with Steam
@@ -226,7 +226,7 @@
       steamArgs = [ "-pipewire-dmabuf" "-gamepadui" "-steamdeck" "-steamos3" ];
     };
     protontricks.enable = true; #  Enable protontricks, a simple wrapper for running Winetricks commands for Proton games.
-    extest.enable = true; # Load the extest library into Steam, to translate X11 input events to uinput events (Steam Input on Wayland)
+    extest.enable = false; # Make sure extest is disabled
     localNetworkGameTransfers.openFirewall = true; # Open ports in the firewall for Steam Local Network Game Transfers.
     remotePlay.openFirewall = true; # Open ports in the firewall for Steam Remote Play
     dedicatedServer.openFirewall = true; # Open ports in the firewall for Source Dedicated Server
@@ -566,3 +566,5 @@
   system.stateVersion = "26.05"; # DO NOT CHANGE
   # }}}
 }
+
+

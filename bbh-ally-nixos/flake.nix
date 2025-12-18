@@ -16,7 +16,7 @@
         specialArgs = { inherit nix-cachyos-kernel; };
         modules = [
           ./configuration.nix
-          ./hardware-configuration.nix
+          ./hardware.nix
           nixos-hardware.nixosModules.asus-ally-rc71l
           ({ pkgs, ... }: {
             nixpkgs.overlays = [ nix-cachyos-kernel.overlay ];
