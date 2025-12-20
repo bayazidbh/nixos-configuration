@@ -169,6 +169,15 @@
   # Enable uinput support
   hardware.uinput.enable = true;
 
+  services.beesd.filesystems = {
+    root = {
+      spec = "LABEL=NIXOS";
+      hashTableSizeMB = 2048;
+      verbosity = "crit";
+      extraOptions = [ "--loadavg-target" "5.0" ];
+    };
+  };
+
   # }}}
 
   # {DESKTOP ENVIRONMENT}
@@ -399,20 +408,20 @@
     kdePackages.kcron kdePackages.fcitx5-configtool # kdePackages.sddm-kcm
     kdePackages.applet-window-buttons6
     kdePackages.partitionmanager kdePackages.filelight
-    kdePackages.kcharselect kdePackages.kcalc
-    kdePackages.arianna kdePackages.kate
+    kdePackages.kate kdePackages.kcharselect kdePackages.kcalc kdePackages.kcolorchooser
+    kdePackages.kontrast kdePackages.arianna haruna krename
 
     # Themes
     whitesur-kde whitesur-cursors whitesur-gtk-theme whitesur-icon-theme # whitesur theme
 
     # GUI Apps
-    fsearch krename grsync qdirstat czkawka peazip # file management
+    fsearch grsync qdirstat czkawka peazip # file management
     wpsoffice normcap masterpdfeditor4 # document editing
     junction brave firefox google-chrome microsoft-edge vivaldi vivaldi-ffmpeg-codecs # browser
     gabutdm qbittorrent resilio-sync rquickshare # file transfer
     protonvpn-gui proton-pass proton-authenticator # proton
     discord vencord vesktop # social media
-    haruna vlc mcomix mangayomi koreader stremio # multimedia
+    vlc mcomix mangayomi koreader stremio # multimedia
     distrobox gearlever boxbuddy # app management
     # CuboCore.corekeyboard # on-screen keyboad (x11 only)
 
@@ -427,6 +436,27 @@
 
     # Others
     mediawriter waydroid-helper networkmanagerapplet # other utilities
+
+    # Create an FHS environment using the command `fhs`, enabling the execution of non-NixOS packages in NixOS!
+    (let base = pkgs.appimageTools.defaultFhsEnvArgs; in
+      pkgs.buildFHSEnv (base // {
+      name = "fhs";
+      targetPkgs = pkgs:
+        # pkgs.buildFHSEnv provides only a minimal FHS environment,
+        # lacking many basic packages needed by most software.
+        # Therefore, we need to add them manually.
+        #
+        # pkgs.appimageTools provides basic packages required by most software.
+        (base.targetPkgs pkgs) ++ (with pkgs; [
+          pkg-config
+          ncurses
+          # Feel free to add more packages here if needed.
+        ]
+      );
+      profile = "export FHS=1";
+      runScript = "bash";
+      extraOutputsToInstall = ["dev"];
+    }))
   ];
   # }}}
 

@@ -10,10 +10,9 @@
     };
     nixos-hardware.url = "github:NixOS/nixos-hardware/master";
     nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel";
-    nix-alien.url = "github:thiagokokada/nix-alien";
   };
 
-  outputs = { nixpkgs, jovian, nixos-hardware, nix-cachyos-kernel, nix-alien, ... }: {
+  outputs = { nixpkgs, jovian, nixos-hardware, nix-cachyos-kernel, ... }: {
     nixosConfigurations = {
       bbh-ally-nixos = nixpkgs.lib.nixosSystem { # Replace "hostname" with your system's hostname
         system = "x86_64-linux";
@@ -27,9 +26,6 @@
             nixpkgs.overlays = [ nix-cachyos-kernel.overlay ];
             boot.kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-latest;
             })
-          ({ self, system, ... }: {
-            environment.systemPackages = with self.inputs.nix-alien.packages.${system}; [ nix-alien ];
-          })
         ];
       };
     };
