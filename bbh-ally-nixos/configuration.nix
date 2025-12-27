@@ -266,6 +266,7 @@
     };
     hardware.has.amd.gpu = true; # https://jovian-experiments.github.io/Jovian-NixOS/options.html#jovian.hardware.amd.gpu.enableBacklightControl
     steamos.useSteamOSConfig = true; # https://jovian-experiments.github.io/Jovian-NixOS/options.html#jovian.steamos.useSteamOSConfig
+    steamos.enableZram = false; # conflicts with swap
     steam.desktopSession = "plasma"; # "plasma" or "plasmax11"
     decky-loader = {
       enable = true;
@@ -428,8 +429,8 @@
     # Gaming
     wineWowPackages.stagingFull dxvk winetricks umu-launcher-unwrapped # wine
     protonup-qt steam-rom-manager sgdboop # steam management
-    lutris-unwrapped heroic-unwrapped # game management
-    faugus-launcher bottles-unwrapped # nero-umu # wine launchers
+    lutris heroic # game management (use wrapped version so executable can run in the fhs env)
+    faugus-launcher (pkgs.bottles.override { removeWarningPopup = true; }) # nero-umu # wine launchers
     scanmem # GameConqueror
     gamescope-wsi # for HDR
     mangohud # performance overlay
@@ -613,7 +614,7 @@
   # Enable system autoupgrade:
   system.autoUpgrade = {
     enable = true;
-    dates = "Fri";
+    dates = "Sat";
     allowReboot = true;
     rebootWindow = {
       lower = "02:00";
