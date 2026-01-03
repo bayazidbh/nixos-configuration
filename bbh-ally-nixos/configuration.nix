@@ -392,7 +392,7 @@
     cmake busybox btrfs-progs
     xdg-utils desktop-file-utils
     wl-clipboard wl-clipboard-x11
-    libwebp libva1 libva-utils libvpx # codecs
+    libwebp libva libva-utils libvpx # codecs
 
     # CLI tools
     dust nix-du graphviz cachix # nix tools
@@ -417,7 +417,7 @@
 
     # GUI Apps
     fsearch grsync qdirstat czkawka peazip # file management
-    wpsoffice normcap masterpdfeditor4 # document editing
+    wpsoffice normcap masterpdfeditor4 masterpdfeditor # document editing
     junction brave firefox google-chrome microsoft-edge vivaldi vivaldi-ffmpeg-codecs # browser
     gabutdm qbittorrent resilio-sync rquickshare # file transfer
     protonvpn-gui proton-pass proton-authenticator # proton
@@ -550,7 +550,7 @@
   # Enable Plasma Browser Integration in Chromium browsers.
   programs.chromium = { enable = true; enablePlasmaBrowserIntegration = true; };
 
-  # Enable Firejail sandboxing
+  # Enable Firejail sandboxing (put config as $HOME/.config/firejail/*.local)
   programs.firejail = {
     enable = true;
     wrappedBinaries = {
@@ -569,6 +569,10 @@
       wpspdf = {
         executable = "${lib.getBin pkgs.wpsoffice}/bin/wpspdf";
         profile = "${pkgs.firejail}/etc/firejail/wpspdf.profile";
+      };
+      masterpdfeditor4  = {
+        executable = "${lib.getBin pkgs.masterpdfeditor4}/bin/masterpdfeditor4";
+        profile = "${pkgs.firejail}/etc/firejail/masterpdfeditor4.profile";
       };
     };
   };
@@ -608,8 +612,16 @@
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
   # use nix-cachyos-kernel binary cache
-  nix.settings.substituters = [ "https://attic.xuyh0120.win/lantian" ];
-  nix.settings.trusted-public-keys = [ "lantian:EeAUQ+W+6r7EtwnmYjeVwx5kOGEBpjlBfPlzGlTNvHc=" ];
+  nix.settings = {
+    substituters = [
+      "https://attic.xuyh0120.win/lantian" # nix-cachyos-kernel cache
+      "https://ezkea.cachix.org" # an-anime-team cache
+    ];
+    trusted-public-keys = [
+      "lantian:EeAUQ+W+6r7EtwnmYjeVwx5kOGEBpjlBfPlzGlTNvHc="
+      "ezkea.cachix.org-1:ioBmUbJTZIKsHmWWXPe1FSFbeVe+afhfgqgTSNd34eI="
+    ];
+  };
 
   # Enable system autoupgrade:
   system.autoUpgrade = {
