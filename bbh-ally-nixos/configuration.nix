@@ -611,18 +611,6 @@
   # {{{
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
-  # use nix-cachyos-kernel binary cache
-  nix.settings = {
-    substituters = [
-      "https://attic.xuyh0120.win/lantian" # nix-cachyos-kernel cache
-      "https://ezkea.cachix.org" # an-anime-team cache
-    ];
-    trusted-public-keys = [
-      "lantian:EeAUQ+W+6r7EtwnmYjeVwx5kOGEBpjlBfPlzGlTNvHc="
-      "ezkea.cachix.org-1:ioBmUbJTZIKsHmWWXPe1FSFbeVe+afhfgqgTSNd34eI="
-    ];
-  };
-
   # Enable system autoupgrade:
   system.autoUpgrade = {
     enable = true;
@@ -648,5 +636,3 @@
   system.stateVersion = "26.05"; # DO NOT CHANGE
   # }}}
 }
-
-
