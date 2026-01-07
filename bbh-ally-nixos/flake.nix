@@ -9,7 +9,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     nixos-hardware.url = "github:NixOS/nixos-hardware/master";
-    nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel";
+    nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel/release";
     aagl = {
       url = "github:ezKEa/aagl-gtk-on-nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -33,9 +33,6 @@
           ({ pkgs, ... }: {
             nixpkgs.overlays = [ nix-cachyos-kernel.overlay ];
             boot.kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-latest;
-            # Binary cache
-            nix.settings.substituters = [ "https://attic.xuyh0120.win/lantian" ];
-            nix.settings.trusted-public-keys = [ "lantian:EeAUQ+W+6r7EtwnmYjeVwx5kOGEBpjlBfPlzGlTNvHc=" ];
             })
 
           # hoyo games launchers:
@@ -43,14 +40,11 @@
             imports = [ aagl.nixosModules.default ];
             nix.settings = aagl.nixConfig; # Set up Cachix
             programs.anime-game-launcher.enable = true; # Adds launcher and /etc/hosts rules
-            programs.anime-games-launcher.enable = true;
+            # programs.anime-games-launcher.enable = true;  # unified launcher (beta)
             programs.honkers-railway-launcher.enable = true;
             programs.honkers-launcher.enable = true;
             programs.wavey-launcher.enable = true;
             programs.sleepy-launcher.enable = true;
-            # Binary cache
-            nix.settings.substituters = [ "https://ezkea.cachix.org" ];
-            nix.settings.trusted-public-keys = [ "ezkea.cachix.org-1:ioBmUbJTZIKsHmWWXPe1FSFbeVe+afhfgqgTSNd34eI=" ];
           }
         ];
       };

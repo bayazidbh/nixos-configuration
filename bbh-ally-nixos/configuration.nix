@@ -316,21 +316,6 @@
   # services.power-profiles-daemon.enable = false;
   services.tuned.enable = false;
 
-  # Environment variables for Steamm
-  environment.sessionVariables = {
-    PROTON_USE_NTSYNC       = "1";
-    ENABLE_HDR_WSI          = "1";
-    DXVK_HDR                = "1";
-    PROTON_ENABLE_AMD_AGS   = "1";
-    PROTON_ENABLE_NVAPI     = "1";
-    ENABLE_GAMESCOPE_WSI    = "1";
-    STEAM_MULTIPLE_XWAYLANDS = "1";
-
-    STEAMOS_NESTED_DESKTOP_WIDTH  = "1920";
-    STEAMOS_NESTED_DESKTOP_HEIGHT = "1080";
-    STEAM_EXTRA_COMPAT_TOOLS_PATHS = "$HOME/.local/share/Steam/compatibilitytools.d";
-  };
-
   # Enable CEF debugging for decky-loader
   systemd.services.steam-cef-debug = lib.mkIf config.jovian.decky-loader.enable {
     description = "Create Steam CEF debugging file";
@@ -403,6 +388,7 @@
     appimage-run inxi chezmoi sqlitebrowser rmtrash unrar xdg-ninja chkcrontab # CLI utils
     erdtree delta grex fd bottom ripgrep-all # rust CLIs
     adl gallery-dl mangal mov-cli # CLI-based media downloader
+    android-tools adbtuifm # android
     file ryzenadj # other dependencies
 
     # KDE packages
@@ -417,18 +403,18 @@
 
     # GUI Apps
     fsearch grsync qdirstat czkawka peazip # file management
-    wpsoffice normcap masterpdfeditor4 masterpdfeditor # document editing
+    wpsoffice normcap # document editing
     junction brave firefox google-chrome microsoft-edge vivaldi vivaldi-ffmpeg-codecs # browser
     gabutdm qbittorrent resilio-sync rquickshare # file transfer
     protonvpn-gui proton-pass proton-authenticator # proton
-    discord vencord vesktop # social media
-    vlc mcomix mangayomi koreader stremio # multimedia
+    discord vencord # social media
+    vlc mcomix mangayomi koreader # multimedia
     distrobox gearlever boxbuddy # app management
     # CuboCore.corekeyboard # on-screen keyboad (x11 only)
 
     # Gaming
     wineWowPackages.stagingFull dxvk winetricks umu-launcher-unwrapped # wine
-    protonup-qt steam-rom-manager sgdboop # steam management
+    protonup-qt steam-rom-manager # steam management
     lutris heroic # game management (use wrapped version so executable can run in the fhs env)
     faugus-launcher (pkgs.bottles.override { removeWarningPopup = true; }) # nero-umu # wine launchers
     scanmem # GameConqueror
@@ -437,6 +423,9 @@
 
     # Others
     mediawriter waydroid-helper networkmanagerapplet # other utilities
+
+    # pkgs with recorded build failures:
+    masterpdfeditor4 masterpdfeditor vesktop # sgdboop stremio
 
     # Create an FHS environment using the command `fhs`, enabling the execution of non-NixOS packages in NixOS!
     (let base = pkgs.appimageTools.defaultFhsEnvArgs; in
@@ -508,7 +497,6 @@
 
   # GPS/Location forwarding
   services.geoclue2.enable = true;
-  programs.adb.enable = true;
   # }}}
 
   # {Options}
@@ -574,6 +562,10 @@
         executable = "${lib.getBin pkgs.masterpdfeditor4}/bin/masterpdfeditor4";
         profile = "${pkgs.firejail}/etc/firejail/masterpdfeditor4.profile";
       };
+      masterpdfeditor  = {
+        executable = "${lib.getBin pkgs.masterpdfeditor4}/bin/masterpdfeditor";
+        profile = "${pkgs.firejail}/etc/firejail/masterpdfeditor.profile";
+      };
     };
   };
 
@@ -610,6 +602,20 @@
   # {NIX}
   # {{{
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
+
+  # Binary cache
+  nix.settings = {
+    substituters = [
+      "https://nix-community.cachix.org" # nix-community
+      "https://attic.xuyh0120.win/lantian" # nix-cachyos-kernel
+      "https://ezkea.cachix.org" # an-anime-game-launcher
+    ];
+    trusted-public-keys = [
+      "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+      "lantian:EeAUQ+W+6r7EtwnmYjeVwx5kOGEBpjlBfPlzGlTNvHc="
+      "ezkea.cachix.org-1:ioBmUbJTZIKsHmWWXPe1FSFbeVe+afhfgqgTSNd34eI="
+    ];
+  };
 
   # Enable system autoupgrade:
   system.autoUpgrade = {
