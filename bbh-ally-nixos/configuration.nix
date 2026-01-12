@@ -165,7 +165,7 @@
   hardware.steam-hardware.enable = true;
   # Enable the xone driver for Xbox One and Xbox Series X / S accessories
   # (kernel module may cause build fail)
-  # hardware.xone.enable = true;
+  hardware.xone.enable = true;
   # Enable uinput support
   hardware.uinput.enable = true;
 
@@ -407,7 +407,7 @@
     junction brave firefox google-chrome microsoft-edge vivaldi vivaldi-ffmpeg-codecs # browser
     gabutdm qbittorrent resilio-sync rquickshare # file transfer
     protonvpn-gui proton-pass proton-authenticator # proton
-    discord vencord # social media
+    (discord.override { withVencord = true; }) # withOpenASAR = true; # discord
     vlc mcomix mangayomi koreader # multimedia
     distrobox gearlever boxbuddy # app management
     # CuboCore.corekeyboard # on-screen keyboad (x11 only)
@@ -424,7 +424,7 @@
     # Others
     mediawriter waydroid-helper networkmanagerapplet # other utilities
 
-    # pkgs with recorded build failures:
+    # pkgs that with gcc 15 build issues:
     masterpdfeditor4 masterpdfeditor vesktop # sgdboop stremio
 
     # Create an FHS environment using the command `fhs`, enabling the execution of non-NixOS packages in NixOS!

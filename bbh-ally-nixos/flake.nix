@@ -31,8 +31,8 @@
 
           # nix-cachyos-kernel:
           ({ pkgs, ... }: {
-            nixpkgs.overlays = [ nix-cachyos-kernel.overlay ];
-            boot.kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-latest;
+            nixpkgs.overlays = [ nix-cachyos-kernel.overlays.pinned ];
+            boot.kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-deckify;
             })
 
           # hoyo games launchers:
