@@ -385,7 +385,7 @@
     grc highlight # text coloring
     firejail boxxy # sandboxing
     wget aria2 rsync zsync # file transfer tools
-    appimage-run inxi chezmoi sqlitebrowser rmtrash unrar xdg-ninja chkcrontab # CLI utils
+    appimage-run inxi chezmoi fastfetch sqlitebrowser rmtrash unrar xdg-ninja chkcrontab # CLI utils
     erdtree delta grex fd bottom ripgrep-all # rust CLIs
     adl gallery-dl mangal mov-cli # CLI-based media downloader
     android-tools adbtuifm # android
@@ -425,7 +425,7 @@
     mediawriter waydroid-helper networkmanagerapplet # other utilities
 
     # pkgs that with gcc 15 build issues:
-    masterpdfeditor4 masterpdfeditor vesktop # sgdboop stremio
+    masterpdfeditor4 masterpdfeditor vesktop sgdboop stremio
 
     # Create an FHS environment using the command `fhs`, enabling the execution of non-NixOS packages in NixOS!
     (let base = pkgs.appimageTools.defaultFhsEnvArgs; in
